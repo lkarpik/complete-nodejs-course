@@ -32,10 +32,10 @@ const requestHandler = (req, res) => {
 
             const parsedBody = Buffer.concat(body).toString();
 
-            const msg = parsedBody.split('=');
+            const msg = parsedBody.split('=')[1].replace(/\+/g, ' ');
 
-            fs.writeFile('message.txt', msg[1].replace(/\+/g, ' '), err => {
-                console.log('file saved');
+            fs.writeFile('message.txt', msg, err => {
+                console.log(`file saved with message ${msg}`);
                 res.writeHead(302, {
                     'Location': '/'
                 });
