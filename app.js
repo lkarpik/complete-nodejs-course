@@ -1,24 +1,28 @@
-const fs = require('fs');
-const http = require('http');
+const express = require('express')
+const app = express();
 
-const routes = require('./routes');
+const port = process.env.PORT || 8080;
 
-const server = http.createServer(routes);
+app.use('/', (req, res, next) => {
+    console.log(`Made through always enable middleware`);
+    next();
+})
 
-// const server = http.createServer((req, res) => {
+app.use('/prod', (req, res, next) => {
 
-// let obj = {
-//     url: url.parse(req.url, true),
-//     method: req.method,
-//     headers: req.headers
-// }
-// res.setHeader('Content-Type', 'text/html');
-// res.write(JSON.stringify(obj));
+    console.log('From middleware');
+    res.send('<h1>Hello from middleware</h1>')
+    next();
 
-// res.end(JSON.stringify(obj));
-// process.exit();
-// });
+});
 
-server.listen(8080, () => {
-    console.log('Started');
+app.get('/', (req, res) => {
+
+    console.log('From get');
+    res.send('<h1>Hello from get</h1>')
+
+});
+
+app.listen(port, () => {
+    console.log(`App listening on port: ${port} `);
 });

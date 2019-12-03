@@ -18,7 +18,9 @@
     "url": "https://github.com/lkarpik/complete-nodejs-course/issues"
   },
   "homepage": "https://github.com/lkarpik/complete-nodejs-course#readme",
-  "dependencies": {},
+  "dependencies": {
+    "express": "^4.17.1"
+  },
   "devDependencies": {
     "nodemon": "^2.0.1"
   }
