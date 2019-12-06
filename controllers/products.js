@@ -12,7 +12,8 @@ module.exports = {
         product.save();
         res.redirect('/')
     },
-    getProducts: (req, res, next) => {
+    getProducts: async (req, res, next) => {
+        // Callback solution
         Product.fetchAll(products => {
             res.render('shop', {
                 products: products,
