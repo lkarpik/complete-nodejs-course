@@ -2,7 +2,7 @@ const Product = require('../models/product');
 
 module.exports = {
     getAddProduct: (req, res, next) => {
-        res.render('add-product', {
+        res.render('admin/add-product', {
             title: '🚀Add Product',
             path: '/admin/add-product',
         });
@@ -12,13 +12,28 @@ module.exports = {
         product.save();
         res.redirect('/')
     },
+    getAdminProducts: (req, res, next) => {
+
+        res.render('admin/products', {
+            title: 'Admin Products',
+            path: '/admin/products'
+        })
+    },
+    getIndex: (req, res, next) => {
+
+        res.render('shop/index', {
+            title: '🛒Shop',
+            path: '/'
+        })
+    },
+
     getProducts: async (req, res, next) => {
         // Callback solution
         Product.fetchAll(products => {
-            res.render('shop', {
+            res.render('shop/product-list', {
                 products: products,
-                title: '🛒Shop',
-                path: '/'
+                title: 'Porducts',
+                path: '/products'
             });
         });
     }
