@@ -1,4 +1,5 @@
 const Product = require('../models/product');
+const Cart = require('../models/cart');
 
 exports.getProducts = (req, res, next) => {
   Product.fetchAll(products => {
@@ -60,6 +61,9 @@ exports.postCart = (req, res, next) => {
   console.log(req.body);
 
   const prodId = req.body.id;
+  Product.fetchProductById(prodId, product => {
+    Cart.addProduct(prodId, product.price);
+  })
 
   res.redirect('back');
 };
