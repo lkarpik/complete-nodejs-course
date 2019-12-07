@@ -12,6 +12,7 @@ const getProductsFromFile = cb => {
         if (err) {
             cb([]);
         } else {
+
             cb(JSON.parse(fileContent));
         }
     });
@@ -37,5 +38,17 @@ module.exports = class Product {
 
     static fetchAll(cb) {
         getProductsFromFile(cb);
+    }
+
+    static fetchProductById(id, cb) {
+        getProductsFromFile(products => {
+            const product = products.find(p => {
+                return p.id === id
+            });
+            cb(product);
+            // console.log("From proj.js 47:");
+            // console.log("ID:", id);
+            // console.log(product);
+        });
     }
 };
