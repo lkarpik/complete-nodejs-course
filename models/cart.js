@@ -11,7 +11,10 @@ module.exports = class Cart {
     static addProduct(id, productPrice) {
         // Fetch previous
         fs.readFile(p, (err, data) => {
-            let cart = { products: [], totalPrice: 0 };
+            let cart = {
+                products: [],
+                totalPrice: 0
+            };
             if (!err) {
                 cart = JSON.parse(data);
             }
@@ -20,16 +23,22 @@ module.exports = class Cart {
             const existingProd = cart.products[existingProdIndex];
             let updatedProduct;
             if (existingProd) {
-                updatedProduct = { ...existingProd };
+                updatedProduct = {
+                    ...existingProd
+                };
                 updatedProduct.qty += 1;
                 // cart.products = [...cart.products]
                 cart.products[existingProdIndex] = updatedProduct;
 
             } else {
-                updatedProduct = { id, qty: 1 };
+                updatedProduct = {
+                    id,
+                    qty: 1
+                };
                 cart.products = [...cart.products, updatedProduct]
             }
             cart.totalPrice += parseFloat(productPrice);
+            cart.totalPrice = Math.round(cart.totalPrice * 100) / 100;
             fs.writeFile(p, JSON.stringify(cart), err => {
                 console.log(err);
 
