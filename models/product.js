@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const Cart = require('./cart');
 
 const p = path.join(
     path.dirname(process.mainModule.filename),
@@ -19,7 +20,8 @@ const getProductsFromFile = cb => {
 };
 
 module.exports = class Product {
-    constructor(title, imageUrl, description, price) {
+    constructor(id = null, title, imageUrl, description, price) {
+        this.id = id;
         this.title = title;
         this.imageUrl = imageUrl;
         this.description = description;
@@ -27,12 +29,39 @@ module.exports = class Product {
     }
 
     save() {
-        this.id = Math.random().toString();
         getProductsFromFile(products => {
-            products.push(this);
-            fs.writeFile(p, JSON.stringify(products), err => {
-                console.log(err);
-            });
+            if (this.id) {
+                const existingProductIndex = products.findIndex(prod => prod.id === this.id);
+                const updatedProducts = [...products];
+                updatedProducts[existingProductIndex] = this;
+                fs.writeFile(p, JSON.stringify(updatedProducts), err => {
+                    console.log(err);
+                });
+            } else {
+                this.id = Math.random().toString();
+                products.push(this);
+                fs.writeFile(p, JSON.stringify(products), err => {
+                    console.log(err);
+                });
+            }
+        });
+    }
+
+    static delete(id) {
+        getProductsFromFile(products => {
+            const existingProductIndex = products.findIndex(prod => prod.id === id);
+            console.log(existingProductIndex);
+            if (existingProductIndex !== -1) {
+                const updatedProducts = [...products];
+                const removedProd = updatedProducts.splice(existingProductIndex, 1)[0];
+                fs.writeFile(p, JSON.stringify(updatedProducts), err => {
+                    if (!err) {
+
+                        Cart.removeProduct(id, removedProd.price);
+                    }
+                    console.log(err);
+                });
+            }
         });
     }
 
@@ -43,12 +72,9 @@ module.exports = class Product {
     static fetchProductById(id, cb) {
         getProductsFromFile(products => {
             const product = products.find(p => {
-                return p.id === id
+                return p.id === id;
             });
             cb(product);
-            // console.log("From proj.js 47:");
-            // console.log("ID:", id);
-            // console.log(product);
         });
     }
 };
