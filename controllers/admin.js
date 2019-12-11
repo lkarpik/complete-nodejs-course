@@ -30,10 +30,16 @@ exports.getEditProduct = (req, res, next) => {
   if (!editMode) {
     return res.redirect('/');
   }
-
   const prodId = req.params.id
-  Product.findByPk(prodId)
-    .then(product => {
+  // Get products related only to acive user!
+  req.user.getProducts({
+      where: {
+        id: prodId
+      }
+    })
+    // Product.findByPk(prodId)
+    .then(products => {
+      const product = products[0];
       if (!product) {
         return res.redirect('/');
       }
@@ -68,6 +74,19 @@ exports.postEditProduct = (req, res, next) => {
     .catch(err => console.log(err));
 };
 
+exports.getProducts = (req, res, next) => {
+  req.user.getProducts()
+    // Product.findAll()
+    .then(products => {
+      res.render('admin/products', {
+        prods: products,
+        pageTitle: 'Admin Products',
+        path: '/admin/products'
+      });
+    })
+    .catch(err => console.log(err));
+};
+
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.id;
   Product.findByPk(prodId)
@@ -79,16 +98,4 @@ exports.postDeleteProduct = (req, res, next) => {
       res.redirect('/admin/products');
     })
     .catch(err => console.log(err))
-}
-
-exports.getProducts = (req, res, next) => {
-  Product.findAll()
-    .then(products => {
-      res.render('admin/products', {
-        prods: products,
-        pageTitle: 'Admin Products',
-        path: '/admin/products'
-      });
-    })
-    .catch(err => console.log(err));
 };
