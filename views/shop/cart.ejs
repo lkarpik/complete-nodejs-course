@@ -6,9 +6,9 @@
     <main>
 
         <% if (products.length > 0) { %>
-        <ul>
+        <ul class="cart__item-list">
             <% for (let p of products) { %>
-            <li>
+            <li class="cart__item">
                 <p><%= p.title %> [qty: <%= p.cartItem.quantity %>]</p>
                 <form action="/cart-delete-item" method="POST">
                     <input type="hidden" name="id" value="<%= p.id %>">
@@ -17,7 +17,9 @@
             </li>
             <% } %>
         </ul>
-        <p></p>
+        <form action="/create-order" method="POST">
+            <button class="btn" type="submit">Order Now!</button>
+        </form>
         <% } else { %>
         <h1>No Products in Cart!</h1>
         <% } %>
