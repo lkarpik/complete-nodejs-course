@@ -14,6 +14,8 @@ app.set('views', 'views');
 
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
+const authRoutes = require('./routes/auth');
+
 
 app.use(bodyParser.urlencoded({
   extended: false
@@ -21,7 +23,7 @@ app.use(bodyParser.urlencoded({
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-  User.findById('5dffe2993a7bcae1bce0af07')
+  User.findById('5bab316ce0a7c75f783cb8a8')
     .then(user => {
       req.user = user;
       next();
@@ -31,6 +33,7 @@ app.use((req, res, next) => {
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 
 app.use(errorController.get404);
 
@@ -42,22 +45,20 @@ mongoose
     }
   )
   .then(result => {
-
-    User.findOne()
-      .then(user => {
-        if (!user) {
-          const user = new User({
-            name: 'myLucky',
-            email: 'lucky@lu.com',
-            cart: {
-              items: []
-            }
-          });
-          user.save();
-        }
-      });
+    User.findOne().then(user => {
+      if (!user) {
+        const user = new User({
+          name: 'Luck',
+          email: 'lucky@luck.com',
+          cart: {
+            items: []
+          }
+        });
+        user.save();
+      }
+    });
     app.listen(3000);
-    console.log('App started with connection to mongodb');
+    console.log('App started');
   })
   .catch(err => {
     console.log(err);
