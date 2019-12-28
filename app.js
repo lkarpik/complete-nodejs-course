@@ -3,11 +3,18 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session);
+const config = require('./config');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
 const app = express();
+const store = new MongoDBStore({
+  uri: config.MONGODB_URI,
+  collection: 'sessions'
+});
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
@@ -21,14 +28,26 @@ app.use(bodyParser.urlencoded({
   extended: false
 }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+  secret: 'My cat is meathead',
+  resave: false,
+  saveUninitialized: false,
+  store: store
+}));
 
 app.use((req, res, next) => {
-  User.findById('5bab316ce0a7c75f783cb8a8')
-    .then(user => {
-      req.user = user;
-      next();
-    })
-    .catch(err => console.log(err));
+  if (req.session.user) {
+    console.log('sessionUser');
+    User.findById(req.session.user._id)
+      .then(user => {
+        console.log(user);
+        req.user = user;
+        next();
+      })
+      .catch(err => console.log(err));
+  } else {
+    next();
+  }
 });
 
 app.use('/admin', adminRoutes);
@@ -38,12 +57,10 @@ app.use(authRoutes);
 app.use(errorController.get404);
 
 mongoose
-  .connect(
-    'mongodb+srv://lkarpik:At0fLuVKgPddwPlr@sandbox-0erkh.mongodb.net/nodejsComplete?retryWrites=true&w=majority', {
-      useUnifiedTopology: true,
-      useNewUrlParser: true
-    }
-  )
+  .connect(config.MONGODB_URI, {
+    useUnifiedTopology: true,
+    useNewUrlParser: true
+  })
   .then(result => {
     User.findOne().then(user => {
       if (!user) {
