@@ -5,7 +5,8 @@ exports.getLogin = (req, res, next) => {
   res.render('auth/login', {
     path: '/login',
     pageTitle: 'Login',
-    isAuthenticated: false
+    isAuthenticated: false,
+    errorMessage: req.flash('error')[0]
   });
 };
 
@@ -13,7 +14,8 @@ exports.getSignup = (req, res, next) => {
   res.render('auth/signup', {
     path: '/signup',
     pageTitle: 'Signup',
-    isAuthenticated: false
+    isAuthenticated: false,
+    errorMessage: req.flash('error')[0]
   });
 };
 
@@ -27,8 +29,8 @@ exports.postLogin = (req, res, next) => {
     })
     .then(user => {
       if (!user) {
-        console.log('Wrong email or password');
-        return res.redirect('/login')
+        req.flash('error', 'Wrong email or password');
+        return res.redirect('/login');
       }
       bcrypt
         .compare(loginPassword, user.password)
@@ -42,7 +44,7 @@ exports.postLogin = (req, res, next) => {
                 res.redirect('/');
               });
           }
-          console.log('Wrong email or password');
+          req.flash('error', 'Wrong email or password');
           return res.redirect('/login');
         }).catch((err) => {
           console.log(err);
@@ -59,8 +61,8 @@ exports.postSignup = (req, res, next) => {
   const password = req.body.password;
   const confirmPassword = req.body.confirmPassword;
 
-  if (confirmPassword !== password) {
-    console.log('Passwords dont\'t match!');
+  if (confirmPassword !== password || password.length < 1) {
+    req.flash('error', 'Enter correct password');
     return res.redirect('/signup');
   }
 
@@ -70,7 +72,7 @@ exports.postSignup = (req, res, next) => {
     })
     .then(userDoc => {
       if (userDoc) {
-        console.log('User already exist!');
+        req.flash('error', 'User already exists');
         return res.redirect('/signup');
       } else {
         return bcrypt
@@ -83,6 +85,7 @@ exports.postSignup = (req, res, next) => {
             return user.save();
           })
           .then(result => {
+            req.flash('success', 'User signed up');
             res.redirect('/login');
           })
           .catch(err => console.log(err));;
