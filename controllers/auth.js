@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 
 exports.getLogin = (req, res, next) => {
@@ -19,27 +20,35 @@ exports.getSignup = (req, res, next) => {
 exports.postLogin = (req, res, next) => {
   const loginEmail = req.body.email
   const loginPassword = req.body.password
-  User.findOne({
+
+  User
+    .findOne({
       email: loginEmail
     })
     .then(user => {
-      if (!user || user.password !== loginPassword) {
-        req.session.isLoggedIn = false;
-        req.session.user = null;
-        req.session.save(err => {
-          console.log(err);
+      if (!user) {
+        console.log('Wrong email or password');
+        return res.redirect('/login')
+      }
+      bcrypt
+        .compare(loginPassword, user.password)
+        .then((result) => {
+          if (result) {
+            req.session.isLoggedIn = true;
+            req.session.user = user;
+            return req.session
+              .save(err => {
+                if (err) console.log(err);
+                res.redirect('/');
+              });
+          }
           console.log('Wrong email or password');
+          return res.redirect('/login');
+        }).catch((err) => {
+          console.log(err);
           res.redirect('/login');
         });
 
-      } else {
-        req.session.isLoggedIn = true;
-        req.session.user = user;
-        req.session.save(err => {
-          console.log(err);
-          res.redirect('/');
-        });
-      }
 
     })
     .catch(err => console.log(err));
@@ -49,7 +58,7 @@ exports.postSignup = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
   const confirmPassword = req.body.confirmPassword;
-  // console.log(req.body);
+
   if (confirmPassword !== password) {
     console.log('Passwords dont\'t match!');
     return res.redirect('/signup');
@@ -64,15 +73,20 @@ exports.postSignup = (req, res, next) => {
         console.log('User already exist!');
         return res.redirect('/signup');
       } else {
-        const user = new User({
-          email,
-          password
-        });
-        return user.save();
-
+        return bcrypt
+          .hash(password, 12)
+          .then(bcPassword => {
+            const user = new User({
+              email,
+              password: bcPassword
+            });
+            return user.save();
+          })
+          .then(result => {
+            res.redirect('/login');
+          })
+          .catch(err => console.log(err));;
       }
-    }).then(result => {
-      res.redirect('/login');
     })
     .catch(err => console.log(err));
 
