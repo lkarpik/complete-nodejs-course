@@ -101,8 +101,7 @@ exports.postSignup = (req, res, next) => {
             };
             return sgMail.send(msg);
           }).then(result => {
-            console.log(result);
-            console.log('email sent');
+            console.log('Email sent');
           })
           .catch(err => console.log(err));;
       }
@@ -116,4 +115,16 @@ exports.postLogout = (req, res, next) => {
     console.log(err);
     res.redirect('/');
   });
+};
+
+exports.getReset = (req, res, next) => {
+  res.render('auth/reset', {
+    path: '/reset',
+    pageTitle: 'Reset password',
+    errorMessage: req.flash('error')[0]
+  })
+};
+
+exports.postReset = (req, res, next) => {
+  res.redirect('/');
 };
