@@ -8,8 +8,6 @@ const {
 
 const SENDGRID_API_KEY = require('../config').SENDGRID_API_KEY
 
-
-
 sgMail.setApiKey(SENDGRID_API_KEY);
 
 exports.getLogin = (req, res, next) => {
@@ -26,13 +24,33 @@ exports.getSignup = (req, res, next) => {
     path: '/signup',
     pageTitle: 'Signup',
     isAuthenticated: false,
-    errorMessage: req.flash('error')[0]
+    errorMessage: req.flash('error')[0],
+    oldInput: {
+      email: '',
+      password: '',
+      confirmPassword: ''
+    },
+    validationErrors: []
   });
 };
 
 exports.postLogin = (req, res, next) => {
   const loginEmail = req.body.email
   const loginPassword = req.body.password
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors.array());
+    return res.status(422).render('auth/login', {
+      path: '/login',
+      pageTitle: 'Login',
+      isAuthenticated: false,
+      errorMessage: errors.array()[0].msg,
+      oldInput: {
+        email: '',
+        password: ''
+      }
+    });
+  }
 
   User
     .findOne({
@@ -61,8 +79,6 @@ exports.postLogin = (req, res, next) => {
           console.log(err);
           res.redirect('/login');
         });
-
-
     })
     .catch(err => console.log(err));
 };
@@ -73,56 +89,46 @@ exports.postSignup = (req, res, next) => {
   const confirmPassword = req.body.confirmPassword;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log(errors.array());
     return res.status(422).render('auth/signup', {
       path: '/signup',
       pageTitle: 'Signup',
       isAuthenticated: false,
-      errorMessage: errors.array()
+      errorMessage: errors.array()[0].msg,
+      oldInput: {
+        email,
+        password,
+        confirmPassword
+      },
+      validationErrors: errors.array()
     });
   }
-  if (confirmPassword !== password || password.length < 1) {
-    req.flash('error', 'Enter correct password');
-    return res.redirect('/signup');
-  }
 
-  User
-    .findOne({
-      email: email
+  bcrypt
+    .hash(password, 12)
+    .then(bcPassword => {
+      const user = new User({
+        email,
+        password: bcPassword
+      });
+      return user.save();
     })
-    .then(userDoc => {
-      if (userDoc) {
-        req.flash('error', 'User already exists');
-        return res.redirect('/signup');
-      } else {
-        return bcrypt
-          .hash(password, 12)
-          .then(bcPassword => {
-            const user = new User({
-              email,
-              password: bcPassword
-            });
-            return user.save();
-          })
-          .then(result => {
-            req.flash('success', 'User signed up');
-            return res.redirect('/login');
-          }).then(result => {
-            const msg = {
-              to: email,
-              from: 'nodejsapp@example.com',
-              subject: 'Sending with SendGrid',
-              text: 'and easy to do anywhere, even with Node.js',
-              html: `<strong>${email} registered</strong>`,
-            };
-            return sgMail.send(msg);
-          }).then(result => {
-            console.log('Email sent');
-          })
-          .catch(err => console.log(err));;
-      }
+    .then(result => {
+      req.flash('success', 'User signed up');
+      return res.redirect('/login');
+    }).then(result => {
+      const msg = {
+        to: email,
+        from: 'nodejsapp@example.com',
+        subject: 'Sending with SendGrid',
+        text: 'and easy to do anywhere, even with Node.js',
+        html: `<strong>${email} registered</strong>`,
+      };
+      // return sgMail.send(msg);
+    }).then(result => {
+      console.log('Email sent');
     })
-    .catch(err => console.log(err));
-
+    .catch(err => console.log(err));;
 };
 
 exports.postLogout = (req, res, next) => {
