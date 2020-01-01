@@ -1,11 +1,21 @@
 const Product = require('../models/product');
+const {
+  validationResult
+} = require('express-validator');
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
     editing: false,
-
+    errorMessage: req.flash('error')[0],
+    oldData: {
+      title: '',
+      imageUrl: '',
+      price: '',
+      description: ''
+    },
+    validationErrors: []
   });
 };
 
@@ -14,6 +24,25 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors.array());
+    return res.status(422).render('admin/edit-product', {
+      pageTitle: 'Add Product',
+      path: '/admin/add-product',
+      editing: false,
+      errorMessage: errors.array()[0].msg,
+      oldData: {
+        title,
+        imageUrl,
+        price,
+        description
+      },
+      validationErrors: errors.array()
+    });
+  }
+
   const product = new Product({
     title: title,
     price: price,
@@ -47,9 +76,17 @@ exports.getEditProduct = (req, res, next) => {
       res.render('admin/edit-product', {
         pageTitle: 'Edit Product',
         path: '/admin/edit-product',
+        errorMessage: req.flash('error')[0],
         editing: editMode,
         product: product,
-
+        oldData: {
+          title: '',
+          imageUrl: '',
+          price: '',
+          description: '',
+          prodId: ''
+        },
+        validationErrors: []
       });
     })
     .catch(err => console.log(err));
@@ -68,6 +105,26 @@ exports.postEditProduct = (req, res, next) => {
         req.flash('error', 'You have no permission to do that');
         return res.redirect('/admin/products');
       }
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        console.log(errors.array());
+        return res.status(422).render('admin/edit-product', {
+          pageTitle: 'Add Product',
+          path: '/admin/add-product',
+          editing: true,
+          errorMessage: errors.array()[0].msg,
+          product,
+          oldData: {
+            title: updatedTitle,
+            price: updatedPrice,
+            description: updatedDesc,
+            imageUrl: updatedImageUrl,
+            _id: prodId
+          },
+          validationErrors: errors.array()
+        });
+      }
+
       product.title = updatedTitle;
       product.price = updatedPrice;
       product.description = updatedDesc;
