@@ -15,7 +15,12 @@ exports.getLogin = (req, res, next) => {
     path: '/login',
     pageTitle: 'Login',
     isAuthenticated: false,
-    errorMessage: req.flash('error')[0]
+    errorMessage: req.flash('error')[0],
+    oldInput: {
+      email: '',
+      password: ''
+    },
+    validationErrors: []
   });
 };
 
@@ -37,6 +42,7 @@ exports.getSignup = (req, res, next) => {
 exports.postLogin = (req, res, next) => {
   const loginEmail = req.body.email
   const loginPassword = req.body.password
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     console.log(errors.array());
@@ -46,9 +52,10 @@ exports.postLogin = (req, res, next) => {
       isAuthenticated: false,
       errorMessage: errors.array()[0].msg,
       oldInput: {
-        email: '',
-        password: ''
-      }
+        email: loginEmail,
+        password: loginPassword
+      },
+      validationErrors: errors.array()
     });
   }
 
@@ -58,8 +65,18 @@ exports.postLogin = (req, res, next) => {
     })
     .then(user => {
       if (!user) {
-        req.flash('error', 'Wrong email or password');
-        return res.redirect('/login');
+
+        return res.status(422).render('auth/login', {
+          path: '/login',
+          pageTitle: 'Login',
+          isAuthenticated: false,
+          errorMessage: 'Wrong email or password',
+          oldInput: {
+            email: loginEmail,
+            password: loginPassword
+          },
+          validationErrors: []
+        });
       }
       bcrypt
         .compare(loginPassword, user.password)
@@ -73,8 +90,17 @@ exports.postLogin = (req, res, next) => {
                 res.redirect('/');
               });
           }
-          req.flash('error', 'Wrong email or password');
-          return res.redirect('/login');
+          return res.status(422).render('auth/login', {
+            path: '/login',
+            pageTitle: 'Login',
+            isAuthenticated: false,
+            errorMessage: 'Wrong email or password',
+            oldInput: {
+              email: loginEmail,
+              password: loginPassword
+            },
+            validationErrors: []
+          });
         }).catch((err) => {
           console.log(err);
           res.redirect('/login');

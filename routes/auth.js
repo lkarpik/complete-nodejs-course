@@ -12,7 +12,36 @@ router.get('/login', authController.getLogin);
 
 router.get('/signup', authController.getSignup);
 
-router.post('/login', authController.postLogin);
+router.post('/login',
+    [
+        body('email')
+        .isEmail()
+        .withMessage('Please enter valid email')
+        .normalizeEmail()
+        // .if(body('password').isLength({
+        //     min: 3
+        // }))
+        // .custom((value, {
+        //     req
+        // }) => {
+        //     return User
+        //         .findOne({
+        //             email: value
+        //         })
+        //         .then(user => {
+        //             if (!user) {
+        //                 return Promise.reject('No user found!');
+        //             }
+        //         });
+        // })
+        ,
+        body('password')
+        .isLength({
+            min: 3
+        })
+        .withMessage('Passwrod nedd to be at least 3')
+        .trim(),
+    ], authController.postLogin);
 
 router.post('/signup',
     [
@@ -20,6 +49,7 @@ router.post('/signup',
         check('email')
         .isEmail()
         .withMessage('Please enter valid email')
+        .normalizeEmail()
         .custom((value, {
             req
         }) => {
@@ -33,19 +63,21 @@ router.post('/signup',
                 })
                 .then(user => {
                     if (user) {
-                        // return Promise.reject('Email already exists!');
-                        throw new Error('Email already exists!');
+                        return Promise.reject('Email already exists!');
+                        // throw new Error('Email already exists!');
                     }
                 });
         }),
 
         body('password')
+        .trim()
         .isLength({
             min: 3
         })
         .withMessage('Passwrod nedd to be at least 3'),
 
         body('confirmPassword')
+        .trim()
         .custom((value, {
             req
         }) => {
