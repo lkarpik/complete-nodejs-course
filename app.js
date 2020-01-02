@@ -55,7 +55,7 @@ app.use((req, res, next) => {
       next();
     })
     .catch(err => {
-      throw new Error(err);
+      next(new Error(err));
     });
 });
 
@@ -74,7 +74,11 @@ app.use(errorController.get404);
 
 app.use((error, req, res, next) => {
   console.log(error);
-  res.redirect('/500');
+  res.status(500).render('500', {
+    pageTitle: 'Error',
+    path: '/500',
+    isAuthenticated: req.session.isLoggedIn
+  });
 });
 
 mongoose
@@ -87,5 +91,7 @@ mongoose
     app.listen(3000);
   })
   .catch(err => {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   });
