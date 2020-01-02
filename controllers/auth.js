@@ -106,7 +106,11 @@ exports.postLogin = (req, res, next) => {
           res.redirect('/login');
         });
     })
-    .catch(err => console.log(err));
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.postSignup = (req, res, next) => {
@@ -154,7 +158,11 @@ exports.postSignup = (req, res, next) => {
     }).then(result => {
       console.log('Email sent');
     })
-    .catch(err => console.log(err));;
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.postLogout = (req, res, next) => {
@@ -208,8 +216,10 @@ exports.postReset = (req, res, next) => {
             return sgMail.send(msg);
           });
       })
-      .catch((err) => {
-        console.log(err);
+      .catch(err => {
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
       });
   })
 };
@@ -234,8 +244,10 @@ exports.getNewPassword = (req, res, next) => {
         passwordToken: token
       });
     })
-    .catch((err) => {
-      console.log(err);
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
 
@@ -267,7 +279,9 @@ exports.postNewPassword = (req, res, next) => {
       req.flash('success', 'Password changed');
       res.redirect('/login');
     })
-    .catch((err) => {
-      console.log(err);
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 }
