@@ -27,9 +27,9 @@ router.post('/add-product', isAuth,
         .trim()
         .escape(),
 
-        body('imageUrl', 'Invalid url adress')
-        .isURL()
-        .notEmpty(),
+        // body('imageUrl', 'Invalid url adress')
+        // .isURL()
+        // .notEmpty(),
 
         body('price', 'Invalid currency value')
         .isCurrency()
@@ -56,9 +56,9 @@ router.post('/edit-product', isAuth, [
     .trim()
     .escape(),
 
-    body('imageUrl', 'Invalid url adress')
-    .isURL()
-    .notEmpty(),
+    // body('imageUrl', 'Invalid url adress')
+    // .isURL()
+    // .notEmpty(),
 
     body('price', 'Invalid currency value')
     .isCurrency()
