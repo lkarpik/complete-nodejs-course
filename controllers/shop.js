@@ -1,11 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const PDF = require('pdfkit');
+const stripe = require('stripe')('sk_test_G2X2NLKtN74oSkFd9fpAeUu0');
 
 const Product = require('../models/product');
 const Order = require('../models/order');
 
-const ITEMS_PER_PAGE = 1;
+const ITEMS_PER_PAGE = 4;
 
 exports.getProducts = (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
@@ -96,6 +97,7 @@ exports.getCart = (req, res, next) => {
     .execPopulate()
     .then(user => {
       const products = user.cart.items;
+      console.log(products);
       res.render('shop/cart', {
         path: '/cart',
         pageTitle: 'Your Cart',
@@ -140,6 +142,26 @@ exports.postCartDeleteProduct = (req, res, next) => {
 };
 
 exports.postOrder = (req, res, next) => {
+
+  // Set your secret key: remember to change this to your live secret key in production
+  // See your keys here: https://dashboard.stripe.com/account/apikeys
+
+
+  // Token is created using Stripe Checkout or Elements!
+  // Get the payment token ID submitted by the form:
+  const token = req.body.stripeToken; // Using Express
+  let total = 0;
+  // (async () => {
+  //   const charge = await stripe.charges.create({
+  //     amount: 999,
+  //     currency: 'usd',
+  //     description: 'Example charge',
+  //     source: token,
+  //   });
+
+  //   console.log(charge);
+  // })();
+
   req.user
     .populate('cart.items.productId')
     .execPopulate()
@@ -159,9 +181,27 @@ exports.postOrder = (req, res, next) => {
         },
         products: products
       });
+      total = products.reduce((acc, cartProduct) => {
+        return acc + cartProduct.quantity * cartProduct.product.price
+      }, 0);
       return order.save();
     })
     .then(result => {
+      console.log('After order save');
+      console.log(result);
+      return stripe.charges.create({
+        amount: total * 100,
+        currency: 'usd',
+        description: 'Zakup kontrolowany',
+        source: token,
+        metadata: {
+          order_id: result._id.toString()
+        }
+      });
+    })
+    .then((result) => {
+      console.log('After stripe charge');
+      console.log(result);
       return req.user.clearCart();
     })
     .then(() => {
@@ -241,4 +281,29 @@ exports.getInvoice = (req, res, next) => {
     // res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
     // file.pipe(res);
   }).catch(err => next(err))
+}
+
+exports.getCheckout = (req, res, next) => {
+  req.user
+    .populate('cart.items.productId')
+    .execPopulate()
+    .then(user => {
+      const products = user.cart.items;
+      const total = products.reduce((acc, cartProduct) => {
+        return acc + cartProduct.quantity * cartProduct.productId.price
+      }, 0);
+      console.log(total);
+      console.log(products);
+      res.render('shop/checkout', {
+        path: '/checkout',
+        pageTitle: 'Checkout',
+        products: products,
+        totalSum: total
+      });
+    })
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 }
