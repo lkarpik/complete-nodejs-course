@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const PDF = require('pdfkit');
-const stripe = require('stripe')('sk_test_G2X2NLKtN74oSkFd9fpAeUu0');
+const STRIPE_API_KEY = require('./config').STRIPE_API_KEY;
+const stripe = require('stripe')(STRIPE_API_KEY);
 
 const Product = require('../models/product');
 const Order = require('../models/order');
