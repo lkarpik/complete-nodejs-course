@@ -6,9 +6,9 @@ const {
   validationResult
 } = require('express-validator');
 
-const SENDGRID_API_KEY = require('../config').SENDGRID_API_KEY
 
-sgMail.setApiKey(SENDGRID_API_KEY);
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 exports.getLogin = (req, res, next) => {
   res.render('auth/login', {
@@ -227,11 +227,11 @@ exports.postReset = (req, res, next) => {
 exports.getNewPassword = (req, res, next) => {
   const token = req.params.token;
   User.findOne({
-      resetToken: token,
-      resetTokenExpiration: {
-        $gt: Date.now()
-      }
-    })
+    resetToken: token,
+    resetTokenExpiration: {
+      $gt: Date.now()
+    }
+  })
     .then((user) => {
       if (!user) {
         return next();

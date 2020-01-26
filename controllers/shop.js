@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const PDF = require('pdfkit');
-const STRIPE_API_KEY = require('./config').STRIPE_API_KEY;
-const stripe = require('stripe')(STRIPE_API_KEY);
+
+const stripe = require('stripe')(process.env.STRIPE_API_KEY);
 
 const Product = require('../models/product');
 const Order = require('../models/order');
@@ -217,8 +217,8 @@ exports.postOrder = (req, res, next) => {
 
 exports.getOrders = (req, res, next) => {
   Order.find({
-      'user.userId': req.user._id
-    })
+    'user.userId': req.user._id
+  })
     .then(orders => {
       res.render('shop/orders', {
         path: '/orders',

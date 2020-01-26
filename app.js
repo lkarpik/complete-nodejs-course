@@ -12,11 +12,11 @@ const multer = require('multer');
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
-const MONGODB_URI = require('./config').MONGODB_URI;
+
 
 const app = express();
 const store = new MongoDBStore({
-  uri: MONGODB_URI,
+  uri: process.env.MONGODB_URI,
   collection: 'sessions'
 });
 
@@ -110,14 +110,16 @@ app.use((error, req, res, next) => {
   });
 });
 
+console.log(process.env.NODE_ENV);
+
 mongoose
-  .connect(MONGODB_URI, {
+  .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   })
   .then(result => {
     console.log('App started!');
-    app.listen(3000);
+    app.listen(process.env.PORT || 3000);
   })
   .catch(err => {
     const error = new Error(err);
